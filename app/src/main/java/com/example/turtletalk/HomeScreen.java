@@ -1,30 +1,32 @@
 package com.example.turtletalk;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.room.Room;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
 
 import com.example.turtletalk.database.AppDatabase;
+import com.example.turtletalk.viewmodels.ProfileViewModel;
 import com.google.android.material.bottomnavigation.BottomNavigationMenu;
 import com.google.android.material.bottomnavigation.BottomNavigationMenuView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class HomeScreen extends AppCompatActivity {
-
-    private String loggedInUser;
-    AppDatabase database;
+    ProfileViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_screen);
-        database = Room.databaseBuilder(this, AppDatabase.class, "profile-db").build();
-
-        loggedInUser = getIntent().getStringExtra("loggedInUser");
+        viewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
+        Intent intent = getIntent();
+        System.out.println(intent.getStringExtra("username"));
+        viewModel.setCurrentLogin(intent.getStringExtra("username"));
 
         if (savedInstanceState == null){
             getSupportFragmentManager().beginTransaction()
@@ -62,17 +64,5 @@ public class HomeScreen extends AppCompatActivity {
             return true;
         });
 
-    }
-
-    public String getLoggedInUser(){
-        return loggedInUser;
-    }
-
-    public AppDatabase getDatabase(){
-        return database;
-    }
-
-    public void changeErrorText(TextView errorText, String msg){
-        runOnUiThread(() -> errorText.setText(msg));
     }
 }

@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -20,6 +21,7 @@ import android.widget.TextView;
 import com.example.turtletalk.database.AppDatabase;
 import com.example.turtletalk.models.Post;
 import com.example.turtletalk.models.Profile;
+import com.example.turtletalk.viewmodels.ProfileViewModel;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -28,59 +30,29 @@ import java.util.concurrent.CountDownLatch;
 
 public class SearchFragment extends Fragment {
 
-    AppDatabase database;
-    Profile currentProfile;
-    CountDownLatch latch = new CountDownLatch(1);
-    HomeScreen homeScreen;
+
+    ProfileViewModel viewModel;
 
     public SearchFragment() {
         super(R.layout.fragment_search);
     }
 
-    public void setUser(){
-        homeScreen = (HomeScreen) getActivity();
-        assert homeScreen != null;
-
-        database = homeScreen.getDatabase();
-
-        String username = homeScreen.getLoggedInUser();
-        new Thread(() ->{
-            currentProfile = database.getProfileDao().findByUsername(username);
-            latch.countDown();
-        }).start();
-
-    }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState){
         super.onViewCreated(view, savedInstanceState);
-        setUser();
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        viewModel = new ViewModelProvider(getActivity()).get(ProfileViewModel.class);
         EditText usernameEditText = view.findViewById(R.id.search_usernameEditText);
         TextView errorTextView = view.findViewById(R.id.search_error_text);
         Button searchButton = view.findViewById(R.id.search_searchButton);
 
+        viewModel.getSearchState().observe(getViewLifecycleOwner(), (searchState) ->{
+            errorTextView.setText(searchState);
+        });
+
         searchButton.setOnClickListener((buttonView) ->{
+            viewModel.addFriend(usernameEditText.getText().toString());
             System.out.printf("Searching for friend: %s", usernameEditText.getText().toString());
-            new Thread(() ->{
-                Profile friend = (database.getProfileDao().findByUsername(usernameEditText.getText().toString()));
-                if (friend != null){
-                    System.out.println("The friend exists in the database");
-                    if (currentProfile.friendUsernames.contains(friend.username)){
-                        homeScreen.changeErrorText(errorTextView, "Already a friend!");
-                    }else{
-                        currentProfile.addFriend(friend.username);
-                        homeScreen.changeErrorText(errorTextView, "Friend added!");
-                    }
-                }else{
-                    System.out.printf("Searching for friend: %s", usernameEditText.getText().toString());
-                    homeScreen.changeErrorText(errorTextView, "The user was not found");
-                }
-            }).start();
         });
 
 

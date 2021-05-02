@@ -1,6 +1,7 @@
 package com.example.turtletalk;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.room.Room;
 
 import android.content.Intent;
@@ -10,45 +11,32 @@ import android.widget.EditText;
 
 import com.example.turtletalk.database.AppDatabase;
 import com.example.turtletalk.models.Profile;
+import com.example.turtletalk.viewmodels.ProfileViewModel;
 
 public class MainActivity extends AppCompatActivity {
+    ProfileViewModel viewModel;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        AppDatabase database = Room.databaseBuilder(this, AppDatabase.class, "profile-db").build();
+        viewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
 
         EditText usernameLogin = findViewById(R.id.login_username);
         EditText passwordLogin = findViewById(R.id.login_password);
         Button loginButton = findViewById(R.id.login_loginButton);
         Button createAccountButton = findViewById(R.id.login_createAccount);
 
+
+
+        viewModel.getLoginState().observe(this, (currentState) ->{
+            passwordLogin.setText("");
+            passwordLogin.setHint(currentState);
+        });
+
         loginButton.setOnClickListener((view) -> {
-
-            /////////////////////////////////////////////////////////////////
-            // ProfileModel.login(USERNAME, PASSWORD)
-            /////////////////////////////////////////////////////////////////
-
-            new Thread(() ->{
-                Profile profile = database.getProfileDao().findByUsername(usernameLogin.getText().toString());
-
-                if (profile == null){
-                    passwordLogin.setText("");
-                    passwordLogin.setHint("Incorrect Login");
-                    return;
-                }
-
-                if (profile.correctPassword(passwordLogin.getText().toString())){
-                    System.out.println("Successful login!");
-                    Intent i = new Intent(MainActivity.this, HomeScreen.class);
-                    i.putExtra("loggedInUser", profile.username);
-                    MainActivity.this.startActivity(i);
-                }else{
-                    passwordLogin.setText("");
-                    passwordLogin.setHint("Incorrect Login");
-                }
-            }).start();
+            viewModel.loginAccount(usernameLogin.getText().toString(), passwordLogin.getText().toString());
         });
 
         createAccountButton.setOnClickListener((view) -> {
@@ -56,6 +44,24 @@ public class MainActivity extends AppCompatActivity {
             MainActivity.this.startActivity(i);
         });
 
+
+
+
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        viewModel.getCurrentLogin().observe(this, (login) ->{
+            if (viewModel.getCurrentProfile() != null){
+                System.out.println("USER IS NON NULL");
+                Intent i = new Intent(this, HomeScreen.class);
+                i.putExtra("username", viewModel.getCurrentLogin().getValue());
+                startActivity(i);
+                finish();
+            }
+        });
 
     }
 }

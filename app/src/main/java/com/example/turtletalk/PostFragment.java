@@ -13,6 +13,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.provider.MediaStore;
 import android.view.LayoutInflater;
@@ -25,20 +26,19 @@ import android.widget.TextView;
 
 import com.example.turtletalk.database.AppDatabase;
 import com.example.turtletalk.models.Profile;
+import com.example.turtletalk.viewmodels.ProfileViewModel;
 
 import java.util.concurrent.CountDownLatch;
 
 
 public class PostFragment extends Fragment {
 
-    AppDatabase database;
     Profile currentProfile;
     CountDownLatch latch = new CountDownLatch(1);
-    HomeScreen homeScreen;
     Bitmap postBitmap;
     private static final int IMAGE_PICK = 100;
 
-
+    ProfileViewModel viewModel;
 
 
 
@@ -46,31 +46,15 @@ public class PostFragment extends Fragment {
         super(R.layout.fragment_post);
     }
 
-    public void setUser(){
-        homeScreen = (HomeScreen) getActivity();
-        assert homeScreen != null;
-
-        database = homeScreen.getDatabase();
-
-        String username = homeScreen.getLoggedInUser();
-        new Thread(() ->{
-            currentProfile = database.getProfileDao().findByUsername(username);
-            latch.countDown();
-        }).start();
-
-    }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState){
 
         super.onViewCreated(view, savedInstanceState);
+        viewModel = new ViewModelProvider(getActivity()).get(ProfileViewModel.class);
         postBitmap = BitmapFactory.decodeStream(getContext().getResources().openRawResource(R.raw.beach));
-        setUser();
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        currentProfile = viewModel.getCurrentProfile();
+
         postBitmap = BitmapFactory.decodeStream(getContext().getResources().openRawResource(R.raw.beach));
 
         ImageView imageView = view.findViewById(R.id.post_image);
