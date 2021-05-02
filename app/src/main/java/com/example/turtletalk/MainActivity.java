@@ -25,6 +25,11 @@ public class MainActivity extends AppCompatActivity {
         Button createAccountButton = findViewById(R.id.login_createAccount);
 
         loginButton.setOnClickListener((view) -> {
+
+            /////////////////////////////////////////////////////////////////
+            // ProfileModel.login(USERNAME, PASSWORD)
+            /////////////////////////////////////////////////////////////////
+
             new Thread(() ->{
                 Profile profile = database.getProfileDao().findByUsername(usernameLogin.getText().toString());
 

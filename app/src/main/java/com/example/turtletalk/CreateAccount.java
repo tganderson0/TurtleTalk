@@ -19,13 +19,20 @@ public class CreateAccount extends AppCompatActivity {
         setContentView(R.layout.activity_create_account);
         AppDatabase database = Room.databaseBuilder(this, AppDatabase.class, "profile-db").build();
 
+        EditText usernameEdit = findViewById(R.id.createAccount_usernameEdit);
+        EditText nameEdit = findViewById(R.id.createAccount_nameEdit);
+        EditText passwordOne = findViewById(R.id.createAccount_password_one);
+        EditText passwordTwo = findViewById(R.id.createAccount_password_two);
+        TextView errorText = findViewById(R.id.createAccount_errorText);
+
         findViewById(R.id.createAccountScreen_createAccount).setOnClickListener((view) -> {
+
+            //////////////////////////////////////////////////
+            // ProfileViewModel.createAccount(username, name, password, secondPassword);
+            //////////////////////////////////////////////////
+
             new Thread(() ->{
-                EditText usernameEdit = findViewById(R.id.createAccount_usernameEdit);
-                EditText nameEdit = findViewById(R.id.createAccount_nameEdit);
-                EditText passwordOne = findViewById(R.id.createAccount_password_one);
-                EditText passwordTwo = findViewById(R.id.createAccount_password_two);
-                TextView errorText = findViewById(R.id.createAccount_errorText);
+
 
                 if (usernameEdit.getText().toString().equals("")){
                     runOnUiThread(() ->{
